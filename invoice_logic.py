@@ -4,18 +4,19 @@ from jinja2 import Environment, FileSystemLoader
 from xhtml2pdf import pisa
 import streamlit as st
 
-# Create invoices directory if not exists
+# 📁 Create invoices folder if it doesn't exist
 if not os.path.exists("invoices"):
     os.makedirs("invoices")
 
 def create_invoice(name, address, phone, items, discount, tax, invoice_date):
+    # 🔢 Unique invoice number
     invoice_no = str(uuid.uuid4().hex[:8]).upper()
 
-    # Calculate subtotal
+    # 💰 Calculate totals
     subtotal = sum(item['quantity'] * item['price'] for item in items)
     total = subtotal - discount + tax
 
-    # Prepare invoice dictionary
+    # 📦 Invoice data structure
     invoice = {
         "invoice_no": invoice_no,
         "date": invoice_date,
@@ -31,23 +32,6 @@ def create_invoice(name, address, phone, items, discount, tax, invoice_date):
         "total": total
     }
 
-    # Load Jinja2 template
+    # 📄 Load and render HTML template
     env = Environment(loader=FileSystemLoader("templates"))
-    template = env.get_template("invoice_template.html")
-    html = template.render(invoice=invoice)
-
-    # Save as PDF
-    pdf_path = f"invoices/invoice_{invoice_no}.pdf"
-    with open(pdf_path, "wb") as f:
-        pisa.CreatePDF(html, dest=f)
-
-    # Show download button in Streamlit
-    with open(pdf_path, "rb") as pdf_file:
-        st.download_button(
-            label="📄 Download Invoice PDF",
-            data=pdf_file,
-            file_name=f"invoice_{invoice_no}.pdf",
-            mime="application/pdf"
-        )
-
-    return invoice
+    template = env.get_template("invoice_

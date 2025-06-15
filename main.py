@@ -36,4 +36,29 @@ with st.form("item_form"):
 # Show items
 if st.session_state["items"]:
     st.subheader("🧺 Item List")
-    for i,
+    for i, item in enumerate(st.session_state["items"], start=1):
+        st.write(f"**{i}.** {item['name']} — Qty: {item['quantity']}, Price: {item['price']}")
+
+# Discount and Tax
+st.subheader("Discount and Tax")
+discount = st.number_input("Discount", min_value=0.0, value=0.0)
+tax = st.number_input("Tax", min_value=0.0, value=0.0)
+
+# Generate Invoice
+if st.button("✅ Generate Invoice"):
+    if name and address and phone and st.session_state["items"]:
+        invoice = create_invoice(
+            name=name,
+            address=address,
+            phone=phone,
+            items=st.session_state["items"],
+            discount=discount,
+            tax=tax,
+            invoice_date=str(invoice_date)
+        )
+        st.success(f"✅ Invoice #{invoice['invoice_no']} generated successfully!")
+
+        # Clear item list after generation
+        st.session_state["items"] = []
+    else:
+        st.error("❌ Please fill all customer fields and add at least one item.")

@@ -30,7 +30,8 @@
             <td>{{ item.name }}</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.price }}</td>
-            <td>{{ item.quantity * item.price }}</td>
+            <td>{{ (item.quantity | float) * (item.price | float) }}</td>
+
         </tr>
         {% endfor %}
     </table>

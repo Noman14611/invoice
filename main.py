@@ -1,42 +1,30 @@
 import streamlit as st
 from invoice_logic import create_invoice, save_invoice
-from datetime import date
 
-st.set_page_config(page_title="📄 Invoice Maker", layout="wide")
-st.title("📄 Invoice Maker by Nomi")
+st.title("🧾 Invoice Generator")
 
-# Sidebar Customer Info
-st.sidebar.header("👤 Customer Info")
-name = st.sidebar.text_input("Name")
-address = st.sidebar.text_area("Address")
-phone = st.sidebar.text_input("Phone")
+st.markdown("Enter customer and product details below:")
 
-# Items Table
-st.subheader("🛒 Items")
+name = st.text_input("Customer Name")
+address = st.text_input("Customer Address")
+phone = st.text_input("Customer Phone")
+invoice_date = st.date_input("Invoice Date")
+
 items = []
-num = st.number_input("Number of items", 1, 30, 1)
+with st.form("item_form"):
+    item_name = st.text_input("Item Name")
+    quantity = st.number_input("Quantity", min_value=1, value=1)
+    price = st.number_input("Price", min_value=0.0, value=0.0)
+    submitted = st.form_submit_button("Add Item")
+    if submitted:
+        items.append({"name": item_name, "quantity": quantity, "price": price})
 
-for i in range(num):
-    with st.expander(f"Item {i+1}"):
-        item = st.text_input(f"Item Name {i+1}", key=f"name{i}")
-        qty = st.number_input(f"Quantity", 1.0, 1000.0, 1.0, key=f"qty{i}")
-        price = st.number_input(f"Unit Price", 0.0, 100000.0, 0.0, key=f"price{i}")
-        items.append({"name": item, "quantity": qty, "price": price})
+discount = st.number_input("Discount", min_value=0.0, value=0.0)
+tax = st.number_input("Tax", min_value=0.0, value=0.0)
 
-discount = st.number_input("Discount (%)", 0.0, 100.0, 0.0)
-tax = st.number_input("Tax (%)", 0.0, 100.0, 0.0)
-invoice_date = st.date_input("Invoice Date", date.today())
-
-# Generate Invoice
-if st.button("📥 Generate Invoice"):
-    invoice = create_invoice(name, address, phone, items, discount, tax, invoice_date)
-    save_invoice(invoice)
-
-    st.success(f"Invoice #{invoice['invoice_no']} created successfully!")
-
-    st.download_button(
-        label="📄 Download PDF",
-        data=invoice["pdf_bytes"],
-        file_name=f"Invoice_{invoice['invoice_no']}.pdf",
-        mime="application/pdf"
-    )
+if st.button("Generate Invoice"):
+    if name and address and phone and items:
+        invoice = create_invoice(name, address, phone, items, discount, tax, str(invoice_date))
+        st.success(f"Invoice #{invoice['invoice_no']} generated successfully!")
+    else:
+        st.error("Please fill all required fields.")

@@ -30,17 +30,16 @@
             <td>{{ item.name }}</td>
             <td>{{ item.quantity }}</td>
             <td>{{ item.price }}</td>
-            <td>{{ (item.quantity | float) * (item.price | float) }}</td>
-
+            <td>{{ "%.2f"|format(item.quantity * item.price) }}</td>
         </tr>
         {% endfor %}
     </table>
 
     <table style="margin-top: 20px;">
-        <tr><td class="right"><strong>Subtotal:</strong></td><td class="right">{{ invoice.subtotal }}</td></tr>
-        <tr><td class="right"><strong>Discount:</strong></td><td class="right">{{ invoice.discount }}</td></tr>
-        <tr><td class="right"><strong>Tax:</strong></td><td class="right">{{ invoice.tax }}</td></tr>
-        <tr><td class="right"><strong>Total:</strong></td><td class="right"><strong>{{ invoice.total }}</strong></td></tr>
+        <tr><td class="right"><strong>Subtotal:</strong></td><td class="right">{{ "%.2f"|format(invoice.subtotal) }}</td></tr>
+        <tr><td class="right"><strong>Discount:</strong></td><td class="right">{{ "%.2f"|format(invoice.discount) }}</td></tr>
+        <tr><td class="right"><strong>Tax:</strong></td><td class="right">{{ "%.2f"|format(invoice.tax) }}</td></tr>
+        <tr><td class="right"><strong>Total:</strong></td><td class="right"><strong>{{ "%.2f"|format(invoice.total) }}</strong></td></tr>
     </table>
 </body>
 </html>

@@ -1,45 +1,71 @@
-import json, uuid
+import os
+import json
 from datetime import datetime
-from io import BytesIO
-from xhtml2pdf import pisa
 from jinja2 import Template
+from xhtml2pdf import pisa
 
-def create_invoice(name, address, phone, items, discount, tax, date):
-    subtotal = sum(i["quantity"] * i["price"] for i in items)
-    discount_amt = subtotal * discount / 100
-    tax_amt = (subtotal - discount_amt) * tax / 100
-    total = subtotal - discount_amt + tax_amt
-    invoice_no = str(uuid.uuid4())[:8]
+# ✅ Load HTML Template
+def load_template():
+    with open("templates/invoice_template.html", "r", encoding="utf-8") as f:
+        return Template(f.read())
+
+# ✅ Save Invoice Data to JSON
+def save_invoice(invoice, filename="invoices.json"):
+    data = load_invoices()
+    data.append(invoice)
+    with open(filename, "w") as f:
+        json.dump(data, f, indent=4)
+
+# ✅ Load All Invoices from JSON
+def load_invoices(filename="invoices.json"):
+    if not os.path.exists(filename):
+        return []
+    with open(filename, "r") as f:
+        return json.load(f)
+
+# ✅ Create Invoice & Generate PDF
+def create_invoice(name, address, phone, items, discount, tax, invoice_date):
+    # Safely convert items
+    processed_items = []
+    for item in items:
+        processed_items.append({
+            "name": item["name"],
+            "quantity": int(item["quantity"]),
+            "price": float(item["price"]),
+        })
+
+    # Subtotal calculation
+    subtotal = sum(i["quantity"] * i["price"] for i in processed_items)
+    discount_amount = float(discount)
+    tax_amount = float(tax)
+    total = subtotal - discount_amount + tax_amount
 
     invoice = {
-        "invoice_no": invoice_no,
-        "date": str(date),
-        "customer": {"name": name, "address": address, "phone": phone},
-        "items": items,
-        "subtotal": round(subtotal, 2),
-        "discount": round(discount_amt, 2),
-        "tax": round(tax_amt, 2),
-        "total": round(total, 2),
+        "invoice_no": len(load_invoices()) + 1,
+        "date": invoice_date,
+        "customer": {
+            "name": name,
+            "address": address,
+            "phone": phone,
+        },
+        "items": processed_items,
+        "subtotal": subtotal,
+        "discount": discount_amount,
+        "tax": tax_amount,
+        "total": total
     }
 
-    # Load HTML Template
-    with open("templates/invoice_template.html") as f:
-        template = Template(f.read())
-        html = template.render(invoice=invoice)
+    # Render Template
+    template = load_template()
+    html = template.render(invoice=invoice)
 
-    # Generate PDF
-    pdf = BytesIO()
-    pisa.CreatePDF(html, dest=pdf)
-    invoice["pdf_bytes"] = pdf.getvalue()
+    # Save as PDF
+    filename = f"invoices/invoice_{invoice['invoice_no']}.pdf"
+    os.makedirs("invoices", exist_ok=True)
+    with open(filename, "wb") as f:
+        pisa.CreatePDF(html, dest=f)
+
+    # Save data
+    save_invoice(invoice)
+
     return invoice
-
-def save_invoice(invoice):
-    try:
-        with open("invoice_data.json", "r") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        data = []
-
-    data.append(invoice)
-    with open("invoice_data.json", "w") as f:
-        json.dump(data, f, indent=2)

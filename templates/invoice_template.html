@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice {{ invoice.invoice_no }}</title>
+    <title>Invoice {{ invoice["invoice_no"] }}</title>
     <style>
-        body { font-family: Arial; margin: 30px; }
+        body { font-family: Arial, sans-serif; margin: 30px; }
         h1 { text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
@@ -13,33 +13,48 @@
     </style>
 </head>
 <body>
-    <h1>Invoice #{{ invoice.invoice_no }}</h1>
-    <p><strong>Date:</strong> {{ invoice.date }}</p>
+    <h1>Invoice #{{ invoice["invoice_no"] }}</h1>
+    <p><strong>Date:</strong> {{ invoice["date"] }}</p>
 
     <p><strong>Customer:</strong><br>
-    {{ invoice.customer.name }}<br>
-    {{ invoice.customer.address }}<br>
-    {{ invoice.customer.phone }}</p>
+    {{ invoice["customer"]["name"] }}<br>
+    {{ invoice["customer"]["address"] }}<br>
+    {{ invoice["customer"]["phone"] }}</p>
 
     <table>
         <tr>
-            <th>Item</th><th>Qty</th><th>Price</th><th>Total</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
         </tr>
-        {% for item in invoice.items %}
+        {% for item in invoice["items"] %}
         <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.price }}</td>
-            <td>{{ "%.2f"|format(item.quantity * item.price) }}</td>
+            <td>{{ item["name"] }}</td>
+            <td>{{ item["quantity"] }}</td>
+            <td>{{ item["price"] }}</td>
+            <td>{{ (item["quantity"] | float) * (item["price"] | float) }}</td>
         </tr>
         {% endfor %}
     </table>
 
     <table style="margin-top: 20px;">
-        <tr><td class="right"><strong>Subtotal:</strong></td><td class="right">{{ "%.2f"|format(invoice.subtotal) }}</td></tr>
-        <tr><td class="right"><strong>Discount:</strong></td><td class="right">{{ "%.2f"|format(invoice.discount) }}</td></tr>
-        <tr><td class="right"><strong>Tax:</strong></td><td class="right">{{ "%.2f"|format(invoice.tax) }}</td></tr>
-        <tr><td class="right"><strong>Total:</strong></td><td class="right"><strong>{{ "%.2f"|format(invoice.total) }}</strong></td></tr>
+        <tr>
+            <td class="right"><strong>Subtotal:</strong></td>
+            <td class="right">{{ invoice["subtotal"] }}</td>
+        </tr>
+        <tr>
+            <td class="right"><strong>Discount:</strong></td>
+            <td class="right">{{ invoice["discount"] }}</td>
+        </tr>
+        <tr>
+            <td class="right"><strong>Tax:</strong></td>
+            <td class="right">{{ invoice["tax"] }}</td>
+        </tr>
+        <tr>
+            <td class="right"><strong>Total:</strong></td>
+            <td class="right"><strong>{{ invoice["total"] }}</strong></td>
+        </tr>
     </table>
 </body>
 </html>

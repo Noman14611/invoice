@@ -1,71 +1,47 @@
-import os
-import json
-from datetime import datetime
-from jinja2 import Template
-from xhtml2pdf import pisa
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #dddddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        h1 { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Invoice #{{ invoice.invoice_no }}</h1>
+    <p><strong>Date:</strong> {{ invoice.date }}</p>
 
-# ✅ Load HTML Template
-def load_template():
-    with open("templates/invoice_template.html", "r", encoding="utf-8") as f:
-        return Template(f.read())
+    <h3>Customer Information:</h3>
+    <p><strong>Name:</strong> {{ invoice.customer.name }}</p>
+    <p><strong>Address:</strong> {{ invoice.customer.address }}</p>
+    <p><strong>Phone:</strong> {{ invoice.customer.phone }}</p>
 
-# ✅ Save Invoice Data to JSON
-def save_invoice(invoice, filename="invoices.json"):
-    data = load_invoices()
-    data.append(invoice)
-    with open(filename, "w") as f:
-        json.dump(data, f, indent=4)
+    <h3>Items:</h3>
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+        </tr>
+        {% for item in invoice.items %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.price }}</td>
+            <td>{{ (item.quantity | float) * (item.price | float) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-# ✅ Load All Invoices from JSON
-def load_invoices(filename="invoices.json"):
-    if not os.path.exists(filename):
-        return []
-    with open(filename, "r") as f:
-        return json.load(f)
-
-# ✅ Create Invoice & Generate PDF
-def create_invoice(name, address, phone, items, discount, tax, invoice_date):
-    # Safely convert items
-    processed_items = []
-    for item in items:
-        processed_items.append({
-            "name": item["name"],
-            "quantity": int(item["quantity"]),
-            "price": float(item["price"]),
-        })
-
-    # Subtotal calculation
-    subtotal = sum(i["quantity"] * i["price"] for i in processed_items)
-    discount_amount = float(discount)
-    tax_amount = float(tax)
-    total = subtotal - discount_amount + tax_amount
-
-    invoice = {
-        "invoice_no": len(load_invoices()) + 1,
-        "date": invoice_date,
-        "customer": {
-            "name": name,
-            "address": address,
-            "phone": phone,
-        },
-        "items": processed_items,
-        "subtotal": subtotal,
-        "discount": discount_amount,
-        "tax": tax_amount,
-        "total": total
-    }
-
-    # Render Template
-    template = load_template()
-    html = template.render(invoice=invoice)
-
-    # Save as PDF
-    filename = f"invoices/invoice_{invoice['invoice_no']}.pdf"
-    os.makedirs("invoices", exist_ok=True)
-    with open(filename, "wb") as f:
-        pisa.CreatePDF(html, dest=f)
-
-    # Save data
-    save_invoice(invoice)
-
-    return invoice
+    <h3>Summary:</h3>
+    <p><strong>Subtotal:</strong> {{ invoice.subtotal }}</p>
+    <p><strong>Discount:</strong> {{ invoice.discount }}</p>
+    <p><strong>Tax:</strong> {{ invoice.tax }}</p>
+    <p><strong>Total:</strong> {{ invoice.total }}</p>
+</body>
+</html>

@@ -1,2 +1,5 @@
 streamlit
 jinja2
+streamlit
+jinja2
+weasyprint

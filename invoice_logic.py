@@ -1,5 +1,4 @@
 from jinja2 import Environment, FileSystemLoader
-import os
 
 def create_invoice_html(name, address, phone, items, discount, tax, invoice_date):
     subtotal = sum(item["quantity"] * item["price"] for item in items)

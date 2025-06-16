@@ -1,9 +1,6 @@
 import os
-import pdfkit
 from jinja2 import Environment, FileSystemLoader
-
-# PDF config path (for Streamlit Cloud)
-config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
+from xhtml2pdf import pisa
 
 def create_invoice(name, address, phone, items, discount, tax, invoice_date):
     invoice_no = len(os.listdir("invoices")) + 1 if os.path.exists("invoices") else 1
@@ -35,5 +32,6 @@ def generate_pdf(invoice):
         os.makedirs("invoices")
 
     output_path = f"invoices/invoice_{invoice['invoice_no']}.pdf"
-    pdfkit.from_string(html, output_path, configuration=config)
+    with open(output_path, "w+b") as f:
+        pisa.CreatePDF(html, dest=f)
     return output_path

@@ -1,23 +1,18 @@
 import os
-import uuid
 from jinja2 import Environment, FileSystemLoader
-from xhtml2pdf import pisa
-import streamlit as st
+import pdfkit
+from datetime import datetime
 
-# Create invoices directory if not exists
-if not os.path.exists("invoices"):
-    os.makedirs("invoices")
+invoice_counter = 1  # You can later replace this with file-based or DB-based counting
 
 def create_invoice(name, address, phone, items, discount, tax, invoice_date):
-    invoice_no = str(uuid.uuid4().hex[:8]).upper()
+    global invoice_counter
 
-    # Calculate subtotal
-    subtotal = sum(item['quantity'] * item['price'] for item in items)
+    subtotal = sum(item["price"] * item["quantity"] for item in items)
     total = subtotal - discount + tax
 
-    # Prepare invoice dictionary
     invoice = {
-        "invoice_no": invoice_no,
+        "invoice_no": invoice_counter,
         "date": invoice_date,
         "customer": {
             "name": name,
@@ -31,23 +26,23 @@ def create_invoice(name, address, phone, items, discount, tax, invoice_date):
         "total": total
     }
 
-    # Load Jinja2 template
+    # Load HTML template
     env = Environment(loader=FileSystemLoader("templates"))
     template = env.get_template("invoice_template.html")
     html = template.render(invoice=invoice)
 
-    # Save as PDF
-    pdf_path = f"invoices/invoice_{invoice_no}.pdf"
-    with open(pdf_path, "wb") as f:
-        pisa.CreatePDF(html, dest=f)
+    # Save as HTML
+    html_filename = f"invoice_{invoice_counter}.html"
+    with open(html_filename, "w", encoding="utf-8") as f:
+        f.write(html)
 
-    # Show download button in Streamlit
-    with open(pdf_path, "rb") as pdf_file:
-        st.download_button(
-            label="📄 Download Invoice PDF",
-            data=pdf_file,
-            file_name=f"invoice_{invoice_no}.pdf",
-            mime="application/pdf"
-        )
+    # Convert HTML to PDF (needs wkhtmltopdf installed)
+    pdf_filename = f"invoice_{invoice_counter}.pdf"
+    try:
+        pdfkit.from_file(html_filename, pdf_filename)
+    except OSError as e:
+        print("PDF generation failed. Please ensure wkhtmltopdf is installed and configured properly.")
+        print(e)
 
+    invoice_counter += 1
     return invoice

@@ -1,18 +1,17 @@
 import os
-from jinja2 import Environment, FileSystemLoader
 import pdfkit
-from datetime import datetime
+from jinja2 import Environment, FileSystemLoader
 
-invoice_counter = 1  # You can later replace this with file-based or DB-based counting
+# PDF config path (for Streamlit Cloud)
+config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
 
 def create_invoice(name, address, phone, items, discount, tax, invoice_date):
-    global invoice_counter
-
-    subtotal = sum(item["price"] * item["quantity"] for item in items)
+    invoice_no = len(os.listdir("invoices")) + 1 if os.path.exists("invoices") else 1
+    subtotal = sum(item["quantity"] * item["price"] for item in items)
     total = subtotal - discount + tax
 
     invoice = {
-        "invoice_no": invoice_counter,
+        "invoice_no": invoice_no,
         "date": invoice_date,
         "customer": {
             "name": name,
@@ -20,29 +19,21 @@ def create_invoice(name, address, phone, items, discount, tax, invoice_date):
             "phone": phone
         },
         "items": items,
-        "subtotal": subtotal,
-        "discount": discount,
-        "tax": tax,
-        "total": total
+        "subtotal": round(subtotal, 2),
+        "discount": round(discount, 2),
+        "tax": round(tax, 2),
+        "total": round(total, 2)
     }
+    return invoice
 
-    # Load HTML template
+def generate_pdf(invoice):
     env = Environment(loader=FileSystemLoader("templates"))
     template = env.get_template("invoice_template.html")
     html = template.render(invoice=invoice)
 
-    # Save as HTML
-    html_filename = f"invoice_{invoice_counter}.html"
-    with open(html_filename, "w", encoding="utf-8") as f:
-        f.write(html)
+    if not os.path.exists("invoices"):
+        os.makedirs("invoices")
 
-    # Convert HTML to PDF (needs wkhtmltopdf installed)
-    pdf_filename = f"invoice_{invoice_counter}.pdf"
-    try:
-        pdfkit.from_file(html_filename, pdf_filename)
-    except OSError as e:
-        print("PDF generation failed. Please ensure wkhtmltopdf is installed and configured properly.")
-        print(e)
-
-    invoice_counter += 1
-    return invoice
+    output_path = f"invoices/invoice_{invoice['invoice_no']}.pdf"
+    pdfkit.from_string(html, output_path, configuration=config)
+    return output_path

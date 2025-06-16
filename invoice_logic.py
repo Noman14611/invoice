@@ -21,5 +21,4 @@ def create_invoice_html(name, address, phone, items, discount, tax, invoice_date
 
     env = Environment(loader=FileSystemLoader("templates"))
     template = env.get_template("invoice_template.html")
-    html = template.render(invoice=invoice)
-    return html
+    return template.render(invoice=invoice)

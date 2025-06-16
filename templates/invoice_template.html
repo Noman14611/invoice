@@ -2,59 +2,70 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice {{ invoice["invoice_no"] }}</title>
+    <title>Invoice #{{ invoice.invoice_no }}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        h1 { text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 40px; color: #333; }
+        h1, h2 { text-align: center; margin-bottom: 0; }
+        .header, .footer { text-align: center; }
+        .customer-info, .summary, .items { margin-top: 30px; width: 100%; }
+        .customer-info p { line-height: 1.6; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background-color: #f0f0f0; }
-        .right { text-align: right; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f4f4f4; }
+        .summary td { text-align: right; }
+        .summary td:first-child { text-align: left; }
+        .total { font-weight: bold; font-size: 18px; border-top: 2px solid #000; }
     </style>
 </head>
 <body>
-    <h1>Invoice #{{ invoice["invoice_no"] }}</h1>
-    <p><strong>Date:</strong> {{ invoice["date"] }}</p>
+    <div class="header">
+        <h1>🧾 Company Name</h1>
+        <p>Modern Invoice</p>
+    </div>
 
-    <p><strong>Customer:</strong><br>
-    {{ invoice["customer"]["name"] }}<br>
-    {{ invoice["customer"]["address"] }}<br>
-    {{ invoice["customer"]["phone"] }}</p>
+    <h2>Invoice #{{ invoice.invoice_no }}</h2>
+    <p><strong>Date:</strong> {{ invoice.date }}</p>
 
-    <table>
-        <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Price</th>
-            <th>Total</th>
-        </tr>
-        {% for item in invoice["items"] %}
-        <tr>
-            <td>{{ item["name"] }}</td>
-            <td>{{ item["quantity"] }}</td>
-            <td>{{ item["price"] }}</td>
-            <td>{{ (item["quantity"] | float) * (item["price"] | float) }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="customer-info">
+        <h3>Customer Details</h3>
+        <p>
+            <strong>Name:</strong> {{ invoice.customer.name }}<br>
+            <strong>Address:</strong> {{ invoice.customer.address }}<br>
+            <strong>Phone:</strong> {{ invoice.customer.phone }}
+        </p>
+    </div>
 
-    <table style="margin-top: 20px;">
-        <tr>
-            <td class="right"><strong>Subtotal:</strong></td>
-            <td class="right">{{ invoice["subtotal"] }}</td>
-        </tr>
-        <tr>
-            <td class="right"><strong>Discount:</strong></td>
-            <td class="right">{{ invoice["discount"] }}</td>
-        </tr>
-        <tr>
-            <td class="right"><strong>Tax:</strong></td>
-            <td class="right">{{ invoice["tax"] }}</td>
-        </tr>
-        <tr>
-            <td class="right"><strong>Total:</strong></td>
-            <td class="right"><strong>{{ invoice["total"] }}</strong></td>
-        </tr>
-    </table>
+    <div class="items">
+        <h3>Purchased Items</h3>
+        <table>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price }}</td>
+                <td>{{ item.quantity * item.price }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="summary">
+        <table>
+            <tr><td>Subtotal:</td><td>{{ invoice.subtotal }}</td></tr>
+            <tr><td>Discount:</td><td>{{ invoice.discount }}</td></tr>
+            <tr><td>Tax:</td><td>{{ invoice.tax }}</td></tr>
+            <tr class="total"><td>Total:</td><td>{{ invoice.total }}</td></tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Thank you for your business!<br>This is a computer-generated invoice.</p>
+    </div>
 </body>
 </html>

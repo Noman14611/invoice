@@ -1,32 +1,47 @@
-# main.py
 import streamlit as st
-from invoice_logic import create_invoice_html
 from datetime import date
+from invoice_logic import create_invoice_html
 
-# Initialize session state
-def reset_all():
-    st.session_state["name"] = ""
-    st.session_state["address"] = ""
-    st.session_state["phone"] = ""
+# --- Session Initialization ---
+for key in ["name", "address", "phone", "items", "discount", "tax"]:
+    if key not in st.session_state:
+        if key == "items":
+            st.session_state[key] = []
+        elif key in ["discount", "tax"]:
+            st.session_state[key] = 0.0
+        else:
+            st.session_state[key] = ""
+
+# --- Reset Functions ---
+def reset_items():
     st.session_state["items"] = []
-    st.session_state["discount"] = 0.0
-    st.session_state["tax"] = 0.0
+    st.rerun()
 
-if "items" not in st.session_state:
-    reset_all()
+def reset_all():
+    for key in ["name", "address", "phone", "items", "discount", "tax"]:
+        if key == "items":
+            st.session_state[key] = []
+        elif key in ["discount", "tax"]:
+            st.session_state[key] = 0.0
+        else:
+            st.session_state[key] = ""
+    st.rerun()
 
+# --- UI Setup ---
 st.set_page_config(page_title="Invoice Generator", layout="centered")
 st.title("🧾 Invoice Generator")
 
-st.text_input("Customer Name", key="name")
-st.text_input("Customer Address", key="address")
-st.text_input("Customer Phone", key="phone")
+# --- Customer Info ---
+st.session_state["name"] = st.text_input("Customer Name", value=st.session_state["name"])
+st.session_state["address"] = st.text_input("Customer Address", value=st.session_state["address"])
+st.session_state["phone"] = st.text_input("Customer Phone", value=st.session_state["phone"])
 invoice_date = st.date_input("Invoice Date", value=date.today())
 
+# --- Add Item Form ---
 st.subheader("Add Item")
 with st.form("item_form"):
     item_name = st.text_input("Item Name")
-    quantity = st.number_input("Quantity", min_value=1, value=1, step=1)
+    quantity = st.number_input("Quantity", min_value=1, value=1)
     price = st.number_input("Price", min_value=0.0, value=0.0)
     add_btn = st.form_submit_button("Add Item")
     if add_btn:
@@ -37,31 +52,36 @@ with st.form("item_form"):
                 "price": price
             })
         else:
-            st.warning("⚠️ Item name is required.")
+            st.warning("⚠️ Please enter a valid item name.")
 
+# --- Show Items ---
 if st.session_state["items"]:
     st.subheader("Items List")
     for i, item in enumerate(st.session_state["items"], 1):
         st.write(f"{i}. {item['name']} — Qty: {item['quantity']}, Price: {item['price']}")
 
-discount = st.number_input("Discount", min_value=0.0, value=st.session_state.get("discount", 0.0), key="discount")
-tax = st.number_input("Tax", min_value=0.0, value=st.session_state.get("tax", 0.0), key="tax")
+# --- Discount & Tax ---
+st.session_state["discount"] = st.number_input("Discount", min_value=0.0, value=st.session_state["discount"])
+st.session_state["tax"] = st.number_input("Tax", min_value=0.0, value=st.session_state["tax"])
 
-col1, col2, col3 = st.columns(3)
-
+# --- Buttons ---
+col1, col2, col3 = st.columns([1, 1, 1])
 with col1:
-    if st.button("🧹 Clear All Shopping"):
-        st.session_state["items"] = []
-        st.rerun()
+    if st.button("🧹 Clear Items"):
+        reset_items()
 
 with col2:
-    if st.button("🧹 Clear All Info"):
+    if st.button("♻️ Clear All Info"):
         reset_all()
-        st.rerun()
 
 with col3:
     if st.button("✅ Generate Invoice"):
-        if st.session_state["name"] and st.session_state["address"] and st.session_state["phone"] and st.session_state["items"]:
+        if all([
+            st.session_state["name"].strip(),
+            st.session_state["address"].strip(),
+            st.session_state["phone"].strip(),
+            len(st.session_state["items"]) > 0
+        ]):
             html = create_invoice_html(
                 name=st.session_state["name"],
                 address=st.session_state["address"],

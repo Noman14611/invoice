@@ -1,6 +1,7 @@
 def create_invoice_html(name, address, phone, items, discount, tax, invoice_date):
     subtotal = sum(item["quantity"] * item["price"] for item in items)
     total = subtotal - discount + tax
+
     rows = ""
     for item in items:
         total_price = item["quantity"] * item["price"]
@@ -11,7 +12,7 @@ def create_invoice_html(name, address, phone, items, discount, tax, invoice_date
             <td>{item['price']}</td>
             <td>{total_price}</td>
         </tr>"""
-    
+
     return f"""
     <html>
     <head>
@@ -34,7 +35,7 @@ def create_invoice_html(name, address, phone, items, discount, tax, invoice_date
         <p class='total'>Subtotal: {subtotal}</p>
         <p class='total'>Discount: {discount}</p>
         <p class='total'>Tax: {tax}</p>
-        <p class='total'>Total: {total}</p>
+        <p class='total'>Grand Total: {total}</p>
     </body>
     </html>
     """

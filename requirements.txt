@@ -8,3 +8,5 @@ jinja2
 streamlit
 jinja2
 xhtml2pdf
+streamlit
+jinja2

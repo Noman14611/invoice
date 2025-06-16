@@ -1,41 +1,31 @@
+from jinja2 import Template
+from weasyprint import HTML
+import tempfile
+import os
+
 def create_invoice_html(name, address, phone, items, discount, tax, invoice_date):
-    subtotal = sum(item["quantity"] * item["price"] for item in items)
+    subtotal = sum(item['price'] * item['quantity'] for item in items)
     total = subtotal - discount + tax
+    invoice_data = {
+        "invoice_no": 1,
+        "date": invoice_date,
+        "customer": {
+            "name": name,
+            "address": address,
+            "phone": phone
+        },
+        "items": items,
+        "subtotal": f"{subtotal:.2f}",
+        "discount": f"{discount:.2f}",
+        "tax": f"{tax:.2f}",
+        "total": f"{total:.2f}"
+    }
 
-    rows = ""
-    for item in items:
-        total_price = item["quantity"] * item["price"]
-        rows += f"""
-        <tr>
-            <td>{item['name']}</td>
-            <td>{item['quantity']}</td>
-            <td>{item['price']}</td>
-            <td>{total_price}</td>
-        </tr>"""
+    with open("templates/invoice_template.html", "r", encoding="utf-8") as f:
+        template = Template(f.read())
+    return template.render(invoice=invoice_data)
 
-    return f"""
-    <html>
-    <head>
-        <style>
-            body {{ font-family: Arial; margin: 40px; }}
-            table {{ width: 100%; border-collapse: collapse; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; }}
-            th {{ background-color: #f2f2f2; }}
-            .total {{ font-weight: bold; }}
-        </style>
-    </head>
-    <body>
-        <h2 style='text-align:center;'>Nouman Enterprises</h2>
-        <p><b>Date:</b> {invoice_date}</p>
-        <p><b>Customer:</b> {name}<br><b>Address:</b> {address}<br><b>Phone:</b> {phone}</p>
-        <table>
-            <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-            {rows}
-        </table>
-        <p class='total'>Subtotal: {subtotal}</p>
-        <p class='total'>Discount: {discount}</p>
-        <p class='total'>Tax: {tax}</p>
-        <p class='total'>Grand Total: {total}</p>
-    </body>
-    </html>
-    """
+def save_invoice_pdf(html):
+    tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    HTML(string=html).write_pdf(tmp_file.name)
+    return tmp_file.name

@@ -2,15 +2,10 @@ import streamlit as st
 from datetime import date
 from invoice_logic import create_invoice_html
 
-# --- Session Initialization ---
+# --- Initialize Session State ---
 for key in ["name", "address", "phone", "items", "discount", "tax"]:
     if key not in st.session_state:
-        if key == "items":
-            st.session_state[key] = []
-        elif key in ["discount", "tax"]:
-            st.session_state[key] = 0.0
-        else:
-            st.session_state[key] = ""
+        st.session_state[key] = [] if key == "items" else 0.0 if key in ["discount", "tax"] else ""
 
 # --- Reset Functions ---
 def reset_items():
@@ -19,15 +14,10 @@ def reset_items():
 
 def reset_all():
     for key in ["name", "address", "phone", "items", "discount", "tax"]:
-        if key == "items":
-            st.session_state[key] = []
-        elif key in ["discount", "tax"]:
-            st.session_state[key] = 0.0
-        else:
-            st.session_state[key] = ""
+        st.session_state[key] = [] if key == "items" else 0.0 if key in ["discount", "tax"] else ""
     st.rerun()
 
-# --- UI Setup ---
+# --- UI Start ---
 st.set_page_config(page_title="Invoice Generator", layout="centered")
 st.title("🧾 Invoice Generator")
 
@@ -37,7 +27,7 @@ st.session_state["address"] = st.text_input("Customer Address", value=st.session
 st.session_state["phone"] = st.text_input("Customer Phone", value=st.session_state["phone"])
 invoice_date = st.date_input("Invoice Date", value=date.today())
 
-# --- Add Item Form ---
+# --- Item Form ---
 st.subheader("Add Item")
 with st.form("item_form"):
     item_name = st.text_input("Item Name")
@@ -45,7 +35,7 @@ with st.form("item_form"):
     price = st.number_input("Price", min_value=0.0, value=0.0)
     add_btn = st.form_submit_button("Add Item")
     if add_btn:
-        if item_name.strip() != "":
+        if item_name.strip():
             st.session_state["items"].append({
                 "name": item_name,
                 "quantity": quantity,
@@ -54,7 +44,7 @@ with st.form("item_form"):
         else:
             st.warning("⚠️ Please enter a valid item name.")
 
-# --- Show Items ---
+# --- Item List ---
 if st.session_state["items"]:
     st.subheader("Items List")
     for i, item in enumerate(st.session_state["items"], 1):
@@ -75,24 +65,27 @@ with col2:
         reset_all()
 
 with col3:
-    if st.button("✅ Generate Invoice"):
-        if all([
-            st.session_state["name"].strip(),
-            st.session_state["address"].strip(),
-            st.session_state["phone"].strip(),
-            len(st.session_state["items"]) > 0
-        ]):
-            html = create_invoice_html(
-                name=st.session_state["name"],
-                address=st.session_state["address"],
-                phone=st.session_state["phone"],
-                items=st.session_state["items"],
-                discount=st.session_state["discount"],
-                tax=st.session_state["tax"],
-                invoice_date=str(invoice_date)
-            )
-            st.success("✅ Invoice Ready. You can print or save it.")
-            st.markdown('<button onclick="window.print()">🖨️ Print / Save Invoice</button><br><br>', unsafe_allow_html=True)
-            st.components.v1.html(html, height=1000, scrolling=True)
-        else:
-            st.error("❌ Please fill all customer fields and add at least one item.")
+    generate_btn = st.button("✅ Generate Invoice")
+
+# --- Generate Invoice Logic ---
+if generate_btn:
+    if all([
+        st.session_state["name"].strip(),
+        st.session_state["address"].strip(),
+        st.session_state["phone"].strip(),
+        len(st.session_state["items"]) > 0
+    ]):
+        html = create_invoice_html(
+            name=st.session_state["name"],
+            address=st.session_state["address"],
+            phone=st.session_state["phone"],
+            items=st.session_state["items"],
+            discount=st.session_state["discount"],
+            tax=st.session_state["tax"],
+            invoice_date=str(invoice_date)
+        )
+        st.success("✅ Invoice Ready. You can print or save it.")
+        st.markdown('<button onclick="window.print()">🖨️ Print / Save Invoice</button><br><br>', unsafe_allow_html=True)
+        st.components.v1.html(html, height=1000, scrolling=True)
+    else:
+        st.error("❌ Please fill all customer fields and add at least one item.")

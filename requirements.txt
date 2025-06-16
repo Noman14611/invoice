@@ -3,3 +3,5 @@ jinja2
 streamlit
 jinja2
 weasyprint
+streamlit
+jinja2

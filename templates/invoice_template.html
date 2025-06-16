@@ -15,8 +15,6 @@
         .summary td { text-align: right; }
         .summary td:first-child { text-align: left; }
         .total { font-weight: bold; font-size: 18px; border-top: 2px solid #000; }
-        .print-btn { text-align: center; margin-top: 40px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -46,7 +44,7 @@
                 <th>Price</th>
                 <th>Total</th>
             </tr>
-            {% for item in invoice["items"] %}
+            {% for item in invoice.items %}
             <tr>
                 <td>{{ item.name }}</td>
                 <td>{{ item.quantity }}</td>
@@ -68,10 +66,6 @@
 
     <div class="footer">
         <p>Thank you for your business!<br>This is a computer-generated invoice.</p>
-    </div>
-
-    <div class="print-btn">
-        <button onclick="window.print()">🖨 Print Invoice</button>
     </div>
 </body>
 </html>
